@@ -37,7 +37,7 @@ class DataLoader(object):
 
         :return: number of items
         """
-        df_item = pd.read_csv(self.config.item_path, sep='::', index_col=0, engine='python')
+        df_item = pd.read_csv(self.config.item_path, sep='::', index_col=0, engine='python',encoding="latin-1")
         self.config.item_num = df_item.index.max()
         return self.config.item_num
 
