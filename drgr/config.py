@@ -81,5 +81,5 @@ class Config(object):
         self.num=1
         self.project = "recsys-movielens"
         self.entity = "morphee"
-        self.name = f"Experiments_{num}"
+        self.name = f"Experiments_{self.num}"
 
