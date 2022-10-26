@@ -46,11 +46,17 @@ def train(config: Config, env: Env, agent: DDPGAgent, evaluator: Evaluator,
 
             #LOG INTO WANDB
             wandb.log({"episodes":episode, "average reward": (episode_reward / config.num_steps)})
+    
             if (episode + 1) % config.eval_per_iter == 0:
                 for top_K in config.top_K_list:
-                    evaluator.evaluate(agent=agent, df_eval=df_eval_user, mode='user', top_K=top_K)
+                    avg_recall_score_user,avg_ndcg_score_user = evaluator.evaluate(agent=agent, df_eval=df_eval_user, mode='user', top_K=top_K)
+                    #log to WANDB
+                    wandb.log({"Average Recall Score for user":avg_recall_score_user, "average NDCG Score for user": avg_ndcg_score_user})
+
                 for top_K in config.top_K_list:
-                    evaluator.evaluate(agent=agent, df_eval=df_eval_group, mode='group', top_K=top_K)
+                    avg_recall_score_goup, avg_ndcg_score_group = evaluator.evaluate(agent=agent, df_eval=df_eval_group, mode='group', top_K=top_K)
+                    #log to WANDB
+                    wandb.log({"Average Recall Score for Group":avg_recall_score_goup, "average NDCG Score for Group": avg_ndcg_score_group})
 
 
 if __name__ == '__main__':
