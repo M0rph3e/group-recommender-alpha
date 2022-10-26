@@ -9,6 +9,7 @@ from config import Config
 from data import DataLoader
 from env import Env
 from utils import OUNoise
+import wandb
 
 
 class Evaluator(object):
@@ -36,7 +37,7 @@ class Evaluator(object):
         """
         recall_scores = []
         ndcg_scores = []
-
+        
         for _, row in df_eval.iterrows():
             group = row['group']
             history = row['history']
@@ -61,6 +62,8 @@ class Evaluator(object):
 
         avg_recall_score = float(np.mean(recall_scores))
         avg_ndcg_score = float(np.mean(ndcg_scores))
+
+        
         print('%s: Recall@%d = %.4f, NDCG@%d = %.4f' % (mode.capitalize(), top_K, avg_recall_score,
                                                         top_K, avg_ndcg_score))
         return avg_recall_score, avg_ndcg_score
