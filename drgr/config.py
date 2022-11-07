@@ -54,7 +54,7 @@ class Config(object):
         # Optimizer
         self.batch_size = 64
         self.buffer_size = 100000
-        self.num_episodes = 20
+        self.num_episodes = 10
         self.num_steps = 100
         self.embedding_weight_decay = 1e-6
         self.actor_weight_decay = 1e-6
@@ -78,8 +78,11 @@ class Config(object):
 
 
         #WANDB project name
-        self.num=1
+        self.num=2
         self.project = "recsys-movielens"
         self.entity = "morphee"
         self.name = f"Experiments_{self.num}"
+
+        #Offline Data ?
+        self.offline = True
 
