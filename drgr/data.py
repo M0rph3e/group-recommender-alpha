@@ -6,6 +6,7 @@ from collections import deque, defaultdict
 from typing import Dict
 
 import pandas as pd
+import pickle
 from scipy.sparse import coo_matrix
 
 from config import Config
