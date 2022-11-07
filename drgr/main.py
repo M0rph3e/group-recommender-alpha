@@ -9,6 +9,7 @@ from data import DataLoader
 from env import Env
 from eval import Evaluator
 from utils import OUNoise
+from utils import Offline
 import wandb
 
 def train(config: Config, env: Env, agent: DDPGAgent, evaluator: Evaluator,
@@ -25,6 +26,8 @@ def train(config: Config, env: Env, agent: DDPGAgent, evaluator: Evaluator,
     :return:
     """
     rewards = []
+    offline = config.offline
+    offline_class = Offline(config) if offline else None
     with wandb.init(project=config.project, entity= config.entity,job_type="train", name=config.name) as run:
         for episode in range(config.num_episodes):
             state = env.reset()
@@ -32,9 +35,14 @@ def train(config: Config, env: Env, agent: DDPGAgent, evaluator: Evaluator,
             episode_reward = 0
 
             for step in range(config.num_steps):
-                action = agent.get_action(state)
-                new_state, reward, _, _ = env.step(action)
-                agent.replay_memory.push((state, action, reward, new_state))
+                if offline:
+                    action = offline_class.random_offline_policy()
+                    new_state, reward, _, _ = env.step(action)
+                    agent.replay_memory.push((state, action, reward, new_state))
+                else:
+                    action = agent.get_action(state)
+                    new_state, reward, _, _ = env.step(action)
+                    agent.replay_memory.push((state, action, reward, new_state))
                 state = new_state
                 episode_reward += reward
 
