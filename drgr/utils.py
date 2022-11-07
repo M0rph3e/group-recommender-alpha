@@ -5,6 +5,7 @@ import random
 from collections import deque
 
 import torch
+import numpy as np
 
 from config import Config
 
@@ -85,3 +86,29 @@ class ReplayMemory(object):
         """
         batch = random.sample(self.buffer, batch_size)
         return batch
+
+
+class Offline(object):
+    """
+    Offline data generation
+    """
+    def __init__(self, config : Config):
+        self.item_num = config.item_num
+        self.group_num= config.group_num
+        self.action_size = config.action_size
+
+    def random_offline_policy(self):
+        """
+        generate random action
+        :params config (object) : Configuration file
+        :return action : action or list of action depending on config.action_size
+        """
+        item_num = self.item_num
+
+        if self.action_size <=1: 
+            action = np.random.randint(1,item_num)
+        else :
+            action = []
+            for n in range(self.action_size):
+                action.append(np.random.randint(1,item_num))
+        return action
