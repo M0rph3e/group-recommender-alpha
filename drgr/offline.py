@@ -67,7 +67,7 @@ class Offline(object):
         :return agent : agent trained offline so it can be deployed in the environment during training
         """
         rewards = []
-        for episode in range(config.num_episodes):
+        for episode in range(config.offline_episodes):
             state = self.random_state()
             agent.noise.reset()
             episode_reward = 0

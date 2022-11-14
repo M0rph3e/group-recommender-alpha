@@ -54,7 +54,7 @@ class Config(object):
         # Optimizer
         self.batch_size = 64
         self.buffer_size = 100000
-        self.num_episodes = 15
+        self.num_episodes = 1000
         self.num_steps = 100
         self.embedding_weight_decay = 1e-6
         self.actor_weight_decay = 1e-6
@@ -85,4 +85,5 @@ class Config(object):
 
         #Offline Data ?
         self.is_offline = True
+        self.offline_episodes = 200
 
