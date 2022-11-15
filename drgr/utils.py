@@ -48,7 +48,7 @@ class OUNoise(object):
         :return OU noise
         """
         self.evolve_state()
-        return self.ou_state.copy()
+        return self.ou_state.clone()
 
 
 class ReplayMemory(object):
