@@ -73,7 +73,7 @@ class Offline(object):
             episode_reward = 0
 
             for step in range(config.num_steps):
-                action = agent.get_action(state)
+                action = agent.get_action(state,with_noise=True)
                 new_state, reward, _, _ = self.off_step(action)
                 agent.replay_memory.push((state, action, reward, new_state)) #add to buffer
                 state = new_state
