@@ -54,7 +54,7 @@ class Config(object):
         # Optimizer
         self.batch_size = 64
         self.buffer_size = 100000
-        self.num_episodes = 1000
+        self.num_episodes = 10
         self.num_steps = 100
         self.embedding_weight_decay = 1e-6
         self.actor_weight_decay = 1e-6
@@ -69,6 +69,7 @@ class Config(object):
         self.ou_theta = 0.15
         self.ou_sigma = 0.2
         self.ou_epsilon = 1.0
+        self.with_noise = False
 
         # GPU
         if torch.cuda.is_available():
@@ -78,12 +79,12 @@ class Config(object):
 
 
         #WANDB project name
-        self.num=2
+        self.num=69
         self.project = "recsys-movielens"
         self.entity = "morphee"
         self.name = f"Experiments_{self.num}"
 
         #Offline Data ?
-        self.is_offline = True
+        self.is_offline = False
         self.offline_episodes = 200
 
