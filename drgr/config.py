@@ -79,12 +79,20 @@ class Config(object):
 
 
         #WANDB project name
-        self.num=69
+        self.num=42
         self.project = "recsys-movielens"
         self.entity = "morphee"
         self.name = f"Experiments_{self.num}"
 
         #Offline Data ?
-        self.is_offline = False
-        self.offline_episodes = 200
+        self.offline_path = os.path.join('offline-data')
+        self.seed = 42
+        self.offline_policy = "random" # ["random","famous"] 
+        self.is_offline = True
+        self.generate_offline_data = True
+        self.offline_step = 10
+        self.offline_data_size = 10000 # number of tuple generated with policy
+        self.offline_eval_per_step = 5
+        self.is_off_policy = True
+
 
