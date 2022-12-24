@@ -52,12 +52,14 @@ def train(config: Config, env: Env, agent: DDPGAgent, evaluator: Evaluator,
                 for top_K in config.top_K_list:
                     avg_recall_score_user,avg_ndcg_score_user = evaluator.evaluate(agent=agent, df_eval=df_eval_user, mode='user', top_K=top_K)
                     #log to WANDB
-                    wandb.log({"Average Recall@"+str(top_K)+" Score for user":avg_recall_score_user, "average NDCG@"+str(top_K)+" Score for user": avg_ndcg_score_user})
+                    wandb.log({"Average Recall@"+str(top_K)+" Score for user":avg_recall_score_user,
+                                "average NDCG@"+str(top_K)+" Score for user": avg_ndcg_score_user,"Episode" : episode})
 
                 for top_K in config.top_K_list:
                     avg_recall_score_goup, avg_ndcg_score_group = evaluator.evaluate(agent=agent, df_eval=df_eval_group, mode='group', top_K=top_K)
                     #log to WANDB
-                    wandb.log({"Average Recall@"+str(top_K)+" Score for Group":avg_recall_score_goup, "average NDCG@"+str(top_K)+" Score for Group": avg_ndcg_score_group})
+                    wandb.log({"Average Recall@"+str(top_K)+" Score for Group":avg_recall_score_goup,
+                                "average NDCG@"+str(top_K)+" Score for Group": avg_ndcg_score_group,"Episode" : episode})
 
 
 if __name__ == '__main__':
@@ -71,8 +73,11 @@ if __name__ == '__main__':
     agent = DDPGAgent(config=config, noise=noise, group2members_dict=dataloader.group2members_dict, verbose=True)
     evaluator = Evaluator(config=config)
     offline = Offline(config=config)
-    if config.is_offline:
-        agent = offline.train_offline(agent=agent, config=config,
-            df_eval_user=df_eval_user_test, df_eval_group=df_eval_group_test)
-    train(config=config, env=env, agent=agent, evaluator=evaluator,
-          df_eval_user=df_eval_user_test, df_eval_group=df_eval_group_test)
+    if config.is_offline: #train offline ?
+        if config.generate_offline_data : # regenerate offline data ?
+            offline.get_offline_data(policy=config.offline_policy)
+        agent = offline.train_offline(agent=agent, evaluator=evaluator,
+                                      df_eval_user=df_eval_user_test, df_eval_group=df_eval_group_test)
+    if config.is_off_policy:
+        train(config=config, env=env, agent=agent, evaluator=evaluator,
+              df_eval_user=df_eval_user_test, df_eval_group=df_eval_group_test)
