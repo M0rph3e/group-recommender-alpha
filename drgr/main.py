@@ -33,7 +33,7 @@ def train(config: Config, env: Env, agent: DDPGAgent, evaluator: Evaluator,
             episode_reward = 0
 
             for step in range(config.num_steps):
-                action = agent.get_action(state)
+                action = agent.get_action(state, with_noise=config.with_noise)
                 new_state, reward, _, _ = env.step(action)
                 agent.replay_memory.push((state, action, reward, new_state))
                 state = new_state
