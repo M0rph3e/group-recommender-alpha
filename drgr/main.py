@@ -72,7 +72,7 @@ if __name__ == '__main__':
     noise = OUNoise(config=config)
     agent = DDPGAgent(config=config, noise=noise, group2members_dict=dataloader.group2members_dict, verbose=True)
     evaluator = Evaluator(config=config)
-    offline = Offline(config=config)
+    offline = Offline(config=config,rating_matrix=rating_matrix_train)
     if config.is_offline: #train offline ?
         if config.generate_offline_data : # regenerate offline data ?
             offline.get_offline_data(policy=config.offline_policy)
