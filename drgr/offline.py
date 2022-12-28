@@ -7,19 +7,22 @@ from config import Config
 from agent import DDPGAgent
 from eval import Evaluator
 from env import Env
-from collections import deque
 import random
 import pickle
 import wandb
+from sklearn.decomposition import NMF
+
 
 class Offline(object):
     """
     Offline data generation
     """
-    def __init__(self, config : Config):
+    def __init__(self, config : Config, rating_matrix):
         self.config = config
-        #set random seed for reproducibility
+        self.rating_matrix = rating_matrix
+        #set seed for reproducibility
         np.random.seed(config.seed)
+        random.seed(config.seed)
 
         #offline data directory 
         if not os.path.exists(self.config.offline_path):
@@ -57,7 +60,7 @@ class Offline(object):
         offline_save_path = os.path.join(self.config.offline_path, policy + '_' + 
                                             str(self.config.offline_data_size) + '.pkl')
         print("Generating offline data with " + policy + " policy")
-        buffer = deque([])
+        buffer = []
         for i in range(self.config.offline_data_size):
             if policy == 'random' :
                 buffer.append(self.random_policy())
@@ -67,14 +70,14 @@ class Offline(object):
         #dump genrated data in pkl
         with open(offline_save_path,'wb') as file:
             pickle.dump(buffer,file)
-
+        print("Done")
         return buffer
 
 
 
     def random_policy(self):
         """
-        offline policy during one training step
+        random offline policy during one training step
         :params: action (int) : action of the agent 
         :return: state, action reward, new_state
         """
@@ -90,6 +93,18 @@ class Offline(object):
         new_state = [group_id] + history
 
         return state, action, reward, new_state
+
+    def famous_policy(self):
+        """
+        offline policy during one training step recommanding the most rated items in the rating matrix
+        :params: action (int) : action of the agent 
+        :return: state, action reward, new_state
+        """
+        #TO DO 
+        #Generate the minimized rating matrix
+        pass
+
+
 
 
     def train_offline(self, evaluator:Evaluator,agent: DDPGAgent,
@@ -116,12 +131,9 @@ class Offline(object):
 
             for step in range(self.config.offline_step):
                 #put historical data to agent 
-                agent.replay_memory.push(buffer.pop())
-                if len(buffer)==0:
-                    print("UNROLLED ALL OFFLINE DATA")
-                    break
+                agent.replay_memory.push(random.sample(buffer,k=self.config.offline_batch_size))
                 #update the agent on historical buffer data
-                if len(agent.replay_memory) >= self.config.batch_size:
+                if len(agent.replay_memory) >= self.config.offline_batch_size:
                     agent.update()
 
                 #Evaluate agent each `offline_eval_per_step` 
