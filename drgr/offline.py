@@ -130,8 +130,10 @@ class Offline(object):
                     buffer = pickle.load(file)
 
             for step in range(self.config.offline_step):
-                #put historical data to agent 
-                agent.replay_memory.push(random.sample(buffer,k=self.config.offline_batch_size))
+                #put historical data batch to agent
+                batch = random.sample(buffer,k=self.config.offline_batch_size)
+                for d in batch :
+                    agent.replay_memory.push(d)
                 #update the agent on historical buffer data
                 if len(agent.replay_memory) >= self.config.offline_batch_size:
                     agent.update()
