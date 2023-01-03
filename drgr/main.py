@@ -74,10 +74,12 @@ if __name__ == '__main__':
     evaluator = Evaluator(config=config)
     offline = Offline(config=config,rating_matrix=rating_matrix_train)
     if config.is_offline: #train offline ?
+        offline_agent = DDPGAgent(config=config, noise=noise, group2members_dict=dataloader.group2members_dict, verbose=False)
         if config.generate_offline_data : # regenerate offline data ?
             offline.get_offline_data(policy=config.offline_policy)
-        agent = offline.train_offline(agent=agent, evaluator=evaluator,
-                                      df_eval_user=df_eval_user_test, df_eval_group=df_eval_group_test)
+        offline_agent = offline.train_offline(agent=offline_agent, evaluator=evaluator,
+                                      df_eval_user=df_eval_user_test, df_eval_group=df_eval_group_test,save_agent=config.save_agent)
+        agent = offline.copy_agent(offline_agent,agent)
     if config.is_off_policy:
         train(config=config, env=env, agent=agent, evaluator=evaluator,
               df_eval_user=df_eval_user_test, df_eval_group=df_eval_group_test)
