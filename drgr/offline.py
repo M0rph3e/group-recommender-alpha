@@ -104,11 +104,21 @@ class Offline(object):
         #Generate the minimized rating matrix
         pass
 
+    def copy_agent(self, agent:DDPGAgent, agent_target:DDPGAgent):
+        """
+        Copy Actor and Critic network from a source agent to target DDPG agent
+        :param agent: source agent
+        :param agent_target: target_agent
+        :return agent_target: 
+        """
+        agent_target.actor.load_state_dict(agent.actor.state_dict())
+        agent_target.critic.load_state_dict(agent.critic.state_dict())
 
+        return agent_target
 
 
     def train_offline(self, evaluator:Evaluator,agent: DDPGAgent,
-                      df_eval_user: pd.DataFrame(), df_eval_group: pd.DataFrame(),policy='random',reload=False):
+                      df_eval_user: pd.DataFrame(), df_eval_group: pd.DataFrame(),policy='random',reload=False,save_agent=True):
         """
         Train the agent offline without interacting with the environment
         :param config : configuration file
@@ -121,6 +131,8 @@ class Offline(object):
         print("Training offline")
         offline_save_path = os.path.join(self.config.offline_path, policy + '_' + 
                                             str(self.config.offline_data_size) + '.pkl')
+        agent_save_path = os.path.join(self.config.offline_path, policy + '_' + 
+                                            str(self.config.offline_data_size) + 'agent.pkl')
         with wandb.init(project=self.config.project, entity= self.config.entity,job_type="train", name=self.config.name+'_offline') as run:
             #load historical data buffer     
             if not os.path.exists(offline_save_path) or reload:
@@ -150,5 +162,9 @@ class Offline(object):
                         #log to WANDB
                         wandb.log({"Average Recall@"+str(top_K)+" Score for Group":avg_recall_score_goup, "average NDCG@"+str(top_K)+" Score for Group": avg_ndcg_score_group},step=step)
 
-            
+        #dump pretrained model
+        if save_agent:
+            with open(agent_save_path,'wb') as file:
+                pickle.dump(agent,file)
+            print("Save agent at " + agent_save_path)
         return agent
