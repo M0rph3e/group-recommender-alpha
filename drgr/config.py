@@ -95,5 +95,7 @@ class Config(object):
         self.offline_data_size = 10000 # number of tuple generated with policy
         self.offline_eval_per_step = 5
         self.is_off_policy = False
+        self.save_agent =True
+        self.load_agent= True
 
 
