@@ -118,7 +118,7 @@ class Env(gym.Env):
 
 
 if __name__ == '__main__':
-    np.random.seed(0)
     config = Config()
+    np.random.seed(config.seed)
     dataloader = DataLoader(config)
     env = Env(config=config, rating_matrix=dataloader.load_rating_matrix(dataset_name='train'), dataset_name='train')
