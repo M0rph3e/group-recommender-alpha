@@ -10,6 +10,7 @@ from env import Env
 import random
 import pickle
 import wandb
+from scipy.sparse.csr import csr_matrix
 from sklearn.decomposition import NMF
 
 
@@ -17,9 +18,8 @@ class Offline(object):
     """
     Offline data generation
     """
-    def __init__(self, config : Config, rating_matrix):
+    def __init__(self, config : Config, rating_matrix : csr_matrix):
         self.config = config
-        self.rating_matrix = rating_matrix
         #set seed for reproducibility
         np.random.seed(config.seed)
         random.seed(config.seed)
@@ -27,13 +27,53 @@ class Offline(object):
         #offline data directory 
         if not os.path.exists(self.config.offline_path):
             os.mkdir(self.config.offline_path)
+        
+        # get rating matrix data (basically same principle from env)
+        self.rating_matrix = rating_matrix
+        rating_matrix_coo = rating_matrix.tocoo()
+        rating_matrix_rows = rating_matrix_coo.row
+        rating_matrix_columns = rating_matrix_coo.col
+        self.rating_matrix_index_set = set(zip(*(rating_matrix_rows, rating_matrix_columns)))
+        self.rating_matrix_pred = None
 
+        if self.config.offline_policy != 'random': # if not random policy we use NMF with rating matrix
+            matrix_name = 'mat' +'_'+ 'offline' + '_' + str(self.config.env_n_components) + '.npy'
+            self.pred_matrix_path = os.path.join(self.config.offline_path,matrix_name)
+            self.rating_matrix_pred = self._get_pred_matrix()
+            self.ranking = self._get_famous_id(k=self.config.k_famous)
+
+    def _get_pred_matrix(self):
+        """
+        get prediction matrix proba using NMF
+        :return: rating_matrix_pred
+        """
+        #instanciate model (same as env)
+        if not os.path.exists(self.pred_matrix_path):
+            model = NMF(n_components=self.config.env_n_components, init='random', tol=self.config.env_tol,
+                            max_iter=self.config.env_max_iter, alpha=self.config.env_alpha, verbose=True,
+                            random_state=0)
+            print('-' * 50)
+            print('Train NMF:')
+            W = model.fit_transform(X=self.rating_matrix)
+            H = model.components_
+            rating_matrix_pred = W @ H
+            print('-' * 50)
+            np.save(self.pred_matrix_path, rating_matrix_pred)
+            print('Save rating matrix pred:', self.pred_matrix_path)
+        else:
+            rating_matrix_pred = np.load(self.pred_matrix_path)
+            print('Load rating matrix pred:', self.pred_matrix_path)
+
+        return rating_matrix_pred
+
+
+    
     def random_state(self):
         """
         generate random [group,states] during offline rollouts
         :return state (list) : group + K-item or list of action depending on config.action_size
         """
-        state = [np.random.randint(1,self.config.group_num)] + (random.sample(range(1,self.config.item_num),self.config.history_length)) #+ to concat
+        state = [np.random.randint(1,self.config.total_group_num)] + (random.sample(range(1,self.config.item_num),self.config.history_length)) #+ to concat
         return state
 
     def random_action(self):
@@ -65,7 +105,7 @@ class Offline(object):
             if policy == 'random' :
                 buffer.append(self.random_policy())
             elif policy=='famous':
-                pass #TO DO
+                buffer.append(self.famous_policy())
 
         #dump genrated data in pkl
         with open(offline_save_path,'wb') as file:
@@ -84,6 +124,7 @@ class Offline(object):
         state = self.random_state()
         group_id = state[0]
         history = state[1:] 
+        #print("(group_id: " + str(group_id) + " history: " + str(history) +")")
         action = self.random_action()
         reward = self.random_reward()
 
@@ -101,8 +142,44 @@ class Offline(object):
         :return: state, action reward, new_state
         """
         #TO DO 
-        #Generate the minimized rating matrix
-        pass
+        #Generate the minimized rating matrix with most famous movies
+        ranking = self.ranking
+        state = [np.random.randint(1,self.config.total_group_num)]  + np.random.choice(ranking,size=self.config.history_length+1).tolist()
+        action = np.random.choice(ranking)
+
+
+        
+        #get rewrd with NMF rating matrix pred
+        group_id = state[0]
+        history = state[1:]
+        #print("(group_id: " + str(group_id) + " history: " + str(history) +")")
+        if (group_id, action) in self.rating_matrix_index_set:
+            reward = self.rating_matrix[group_id, action]
+        else:
+            reward_probability = self.rating_matrix_pred[group_id, action]
+            reward = np.random.choice(self.config.rewards, p=[1 - reward_probability, reward_probability])
+
+        if reward > 0:
+            history = history[1:] + [action]
+        
+        new_state = [group_id] + history
+        
+        return state, action, reward, new_state
+    
+    def _get_famous_id(self,k: int):
+        """
+        utility fctn to return the reduced rating matrix 
+        :params: k (int) number of "most rated movies to output"
+        :return: ranking (np array)
+        """
+        r = []
+        for i in range(self.rating_matrix.shape[1]):
+            r.append(self.rating_matrix.getcol(i).count_nonzero())
+            #here `count_nonzero` counts `rating==1` where `getnnz` counts non-missing values (0s and 1s), so can be changed if we wanted most rated or the best rated
+        r = np.array(r)
+        # from https://stackoverflow.com/questions/6910641/how-do-i-get-indices-of-n-maximum-values-in-a-numpy-array
+        ranking = np.argpartition(r, -k)[-k:]
+        return ranking
 
     def copy_agent(self, agent:DDPGAgent, agent_target:DDPGAgent):
         """
@@ -133,7 +210,7 @@ class Offline(object):
                                             str(self.config.offline_data_size) + '.pkl')
         agent_save_path = os.path.join(self.config.offline_path, policy + '_' + 
                                             str(self.config.offline_data_size) + 'agent.pkl')
-        with wandb.init(project=self.config.project, entity= self.config.entity,job_type="train", name=self.config.name+'_offline') as run:
+        with wandb.init(project=self.config.project, entity= self.config.entity,job_type="train", name=self.config.name+'_offline', group='offline-'+self.config.group_name) as run:
             #load historical data buffer     
             if not os.path.exists(offline_save_path) or reload:
                 buffer = self.get_offline_data(policy=policy)
