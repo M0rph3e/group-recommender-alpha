@@ -26,7 +26,7 @@ def train(config: Config, env: Env, agent: DDPGAgent, evaluator: Evaluator,
     :return:
     """
     rewards = []
-    with wandb.init(project=config.project, entity= config.entity,job_type="train", name=config.name) as run:
+    with wandb.init(project=config.project, entity= config.entity,job_type="train", name=config.name, group=config.group_name) as run:
         for episode in range(config.num_episodes):
             state = env.reset()
             agent.noise.reset()
