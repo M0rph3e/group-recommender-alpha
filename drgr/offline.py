@@ -11,6 +11,7 @@ import random
 import pickle
 import wandb
 from scipy.sparse.csr import csr_matrix
+from sklearn import preprocessing as pre
 from sklearn.decomposition import NMF
 
 
@@ -55,8 +56,9 @@ class Offline(object):
             print('-' * 50)
             print('Train NMF:')
             W = model.fit_transform(X=self.rating_matrix)
-            H = model.components_
-            rating_matrix_pred = W @ H
+            H = model.components_ 
+            #normalizing the rating matrix pred in this case to have 
+            rating_matrix_pred = pre.MinMaxScaler().fit_transform(W @ H)
             print('-' * 50)
             np.save(self.pred_matrix_path, rating_matrix_pred)
             print('Save rating matrix pred:', self.pred_matrix_path)
