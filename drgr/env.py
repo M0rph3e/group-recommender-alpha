@@ -7,6 +7,8 @@ import gym
 import numpy as np
 from scipy.sparse.csr import csr_matrix
 from sklearn.decomposition import NMF
+from sklearn import preprocessing as pre
+
 
 from config import Config
 from data import DataLoader
@@ -59,7 +61,7 @@ class Env(gym.Env):
             print('Train environment:')
             W = env_model.fit_transform(X=self.rating_matrix)
             H = env_model.components_
-            self.rating_matrix_pred = W @ H
+            self.rating_matrix_pred = pre.MinMaxScaler().fit_transform(W @ H) #Min_Max Scaler to keep values in [0,1]
             print('-' * 50)
             np.save(self.env_path, self.rating_matrix_pred)
             print('Save environment:', self.env_path)
