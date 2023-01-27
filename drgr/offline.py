@@ -195,6 +195,15 @@ class Offline(object):
 
         return agent_target
 
+    def get_weights(self, agent:DDPGAgent):
+        """
+        Copy Actor and Critic weigths from agent and return them
+        :param agent: source agent
+        :return agent weight: 
+        """
+        weight = agent.actor.state_dict().copy() , agent.critic.state_dict().copy()
+        return weight
+
 
     def train_offline(self, evaluator:Evaluator,agent: DDPGAgent,
                       df_eval_user: pd.DataFrame(), df_eval_group: pd.DataFrame(),policy='random',reload=False,save_agent=True):
@@ -220,6 +229,7 @@ class Offline(object):
                 with open(offline_save_path, 'rb') as file:
                     buffer = pickle.load(file)
 
+            best_top_k = np.NINF if self.config.keep_best else None #negative infinity to be sure to update a t+1
             for step in range(self.config.offline_step):
                 #put historical data batch to agent
                 batch = random.sample(buffer,k=self.config.offline_batch_size)
@@ -227,6 +237,7 @@ class Offline(object):
                     agent.replay_memory.push(d)
                 #update the agent on historical buffer data
                 if len(agent.replay_memory) >= self.config.offline_batch_size:
+                    save_weight = self.get_weights(agent) if self.config.keep_best else None
                     agent.update()
 
                 #Evaluate agent each `offline_eval_per_step` 
@@ -240,6 +251,14 @@ class Offline(object):
                         avg_recall_score_goup, avg_ndcg_score_group = evaluator.evaluate(agent=agent, df_eval=df_eval_group, mode='group', top_K=top_K)
                         #log to WANDB
                         wandb.log({"Average Recall@"+str(top_K)+" Score for Group":avg_recall_score_goup, "average NDCG@"+str(top_K)+" Score for Group": avg_ndcg_score_group},step=step)
+                #AFTER EVAL, check if evaluation gives better top K value (for time constraint we'll check top_20 recall progress, but curves look alike in the online env)
+                    #recall_score_user_20,_ = evaluator.evaluate(agent=agent, df_eval=df_eval_user, mode='user', top_K=20)
+                    recall_score_user_20 = avg_recall_score_user # get the last value in for loop so here for Top_20
+                    if self.config.keep_best and (best_top_k<=recall_score_user_20): #if improvement change best value
+                        best_top_k=recall_score_user_20
+                    else: #else keep previous weights
+                        agent.actor.load_state_dict(save_weight[0]),agent.critic.load_state_dict(save_weight[1]) # load weights of previous best perf
+
 
         #dump pretrained model
         if save_agent:
