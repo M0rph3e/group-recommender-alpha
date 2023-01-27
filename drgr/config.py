@@ -54,7 +54,7 @@ class Config(object):
         # Optimizer
         self.batch_size = 64
         self.buffer_size = 100000
-        self.num_episodes = 10
+        self.num_episodes = 1000
         self.num_steps = 100
         self.embedding_weight_decay = 1e-6
         self.actor_weight_decay = 1e-6
@@ -92,12 +92,15 @@ class Config(object):
         self.offline_policy = "famous" # ["random","famous"] 
         self.is_offline = True
         self.generate_offline_data = True
-        self.offline_step = 50
-        self.offline_data_size = 10000 # number of tuple generated with policy
+        self.offline_step = 500
+        self.offline_data_size = 100000 # number of tuple generated with policy
         self.offline_eval_per_step = 5
-        self.is_off_policy = True
+        self.is_off_policy = False
         self.save_agent =True
         self.load_agent= True
         self.k_famous = 20 # k most famous movie to pick from dataset if offline policy is "famous" 
+
+        #Offline training
+        self.keep_best = True
 
 
