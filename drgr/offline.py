@@ -252,12 +252,13 @@ class Offline(object):
                         #log to WANDB
                         wandb.log({"Average Recall@"+str(top_K)+" Score for Group":avg_recall_score_goup, "average NDCG@"+str(top_K)+" Score for Group": avg_ndcg_score_group},step=step)
                 #AFTER EVAL, check if evaluation gives better top K value (for time constraint we'll check top_20 recall progress, but curves look alike in the online env)
-                    #recall_score_user_20,_ = evaluator.evaluate(agent=agent, df_eval=df_eval_user, mode='user', top_K=20)
-                    recall_score_user_20 = avg_recall_score_user # get the last value in for loop so here for Top_20
-                    if self.config.keep_best and (best_top_k<=recall_score_user_20): #if improvement change best value
-                        best_top_k=recall_score_user_20
-                    else: #else keep previous weights
-                        agent.actor.load_state_dict(save_weight[0]),agent.critic.load_state_dict(save_weight[1]) # load weights of previous best perf
+                    recall_score_user_20,_ = evaluator.evaluate(agent=agent, df_eval=df_eval_user, mode='user', top_K=20)
+                    #recall_score_user_20 = avg_recall_score_user # get the last value in for loop so here for Top_20
+                    if self.config.keep_best:
+                        if (best_top_k<=recall_score_user_20): #if improvement change best value
+                            best_top_k=recall_score_user_20
+                        else: #else keep previous weights
+                            agent.actor.load_state_dict(save_weight[0]),agent.critic.load_state_dict(save_weight[1]) # load weights of previous best perf
 
 
         #dump pretrained model
