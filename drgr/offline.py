@@ -37,7 +37,7 @@ class Offline(object):
         self.rating_matrix_index_set = set(zip(*(rating_matrix_rows, rating_matrix_columns)))
         self.rating_matrix_pred = None
 
-        if self.config.offline_policy != 'random': # if not random policy we use NMF with rating matrix
+        if self.config.offline_policy == 'famous': # if famous policy we use NMF with rating matrix
             matrix_name = 'mat' +'_'+ 'offline' + '_' + str(self.config.env_n_components) + '.npy'
             self.pred_matrix_path = os.path.join(self.config.offline_path,matrix_name)
             self.rating_matrix_pred = self._get_pred_matrix()
@@ -107,11 +107,11 @@ class Offline(object):
             if policy == 'random' :
                 buffer.append(self.random_policy())
             elif policy=='famous':
-                buffer.append(self.famous_policy())
-
-        #dump genrated data in pkl
-        with open(offline_save_path,'wb') as file:
-            pickle.dump(buffer,file)
+                buffer.append(self.famous_policy())        
+        #dump generated data in pkl
+        if policy!= 'previous':
+            with open(offline_save_path,'wb') as file:
+                pickle.dump(buffer,file)
         print("Done")
         return buffer
 
@@ -146,7 +146,7 @@ class Offline(object):
         #TO DO 
         #Generate the minimized rating matrix with most famous movies
         ranking = self.ranking
-        state = [np.random.randint(1,self.config.total_group_num)]  + np.random.choice(ranking,size=self.config.history_length+1).tolist()
+        state = [np.random.randint(1,self.config.total_group_num)]  + np.random.choice(ranking,size=self.config.history_length).tolist()
         action = np.random.choice(ranking)
 
 
@@ -217,8 +217,16 @@ class Offline(object):
         :return agent : agent trained offline so it can be deployed in the environment during training
         """
         print("Training offline")
-        offline_save_path = os.path.join(self.config.offline_path, policy + '_' + 
+        if policy =='previous':
+            #from https://stackoverflow.com/questions/15312953/choose-a-file-starting-with-a-given-string
+            prefix = [filename for filename in os.listdir(self.config.offline_path) if filename.startswith(self.config.offline_policy)]
+            offline_save_path = os.path.join(self.config.offline_path,prefix.pop()) #pop to get at least one previous buffer (might change later)
+            print(offline_save_path)
+        else:
+            offline_save_path = os.path.join(self.config.offline_path, policy + '_' + 
                                             str(self.config.offline_data_size) + '.pkl')
+        
+
         agent_save_path = os.path.join(self.config.offline_path, policy + '_' + 
                                             str(self.config.offline_data_size) + 'agent.pkl')
         with wandb.init(project=self.config.project, entity= self.config.entity,job_type="train", name=self.config.name+'_offline', group='offline-'+self.config.group_name) as run:
