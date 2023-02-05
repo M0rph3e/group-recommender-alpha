@@ -2,7 +2,8 @@
 Main
 """
 import pandas as pd
-
+import os
+import pickle
 from agent import DDPGAgent
 from config import Config
 from data import DataLoader
@@ -26,6 +27,7 @@ def train(config: Config, env: Env, agent: DDPGAgent, evaluator: Evaluator,
     :return:
     """
     rewards = []
+    transition_buffer = [] if config.save_transitions else None # stock transition buffer 
     with wandb.init(project=config.project, entity= config.entity,job_type="train", name=config.name, group=config.group_name) as run:
         for episode in range(config.num_episodes):
             state = env.reset()
@@ -36,6 +38,8 @@ def train(config: Config, env: Env, agent: DDPGAgent, evaluator: Evaluator,
                 action = agent.get_action(state, with_noise=config.with_noise)
                 new_state, reward, _, _ = env.step(action)
                 agent.replay_memory.push((state, action, reward, new_state))
+                if config.save_transitions:
+                    transition_buffer.append((state, action, reward, new_state))
                 state = new_state
                 episode_reward += reward
 
@@ -61,6 +65,16 @@ def train(config: Config, env: Env, agent: DDPGAgent, evaluator: Evaluator,
                     wandb.log({"Average Recall@"+str(top_K)+" Score for Group":avg_recall_score_goup,
                                 "average NDCG@"+str(top_K)+" Score for Group": avg_ndcg_score_group,"Episode" : episode})
 
+        #save buffer after off-policy train loop in offline save path
+        if config.save_transitions: 
+            data_size = len(transition_buffer)
+            offline_save_path = os.path.join(config.offline_path, 'previous' + '_' + 
+                                            str(data_size) + '.pkl')
+            #dump genrated data in pkl
+            with open(offline_save_path,'wb') as file:
+                pickle.dump(transition_buffer,file)
+
+
 
 if __name__ == '__main__':
     config = Config()
@@ -78,7 +92,7 @@ if __name__ == '__main__':
         if config.generate_offline_data : # regenerate offline data ?
             offline.get_offline_data(policy=config.offline_policy)
         offline_agent = offline.train_offline(agent=offline_agent, evaluator=evaluator,
-                                      df_eval_user=df_eval_user_test, df_eval_group=df_eval_group_test,save_agent=config.save_agent)
+                                      df_eval_user=df_eval_user_test, df_eval_group=df_eval_group_test,save_agent=config.save_agent,policy=config.offline_policy)
         agent = offline.copy_agent(offline_agent,agent)
     if config.is_off_policy:
         train(config=config, env=env, agent=agent, evaluator=evaluator,
