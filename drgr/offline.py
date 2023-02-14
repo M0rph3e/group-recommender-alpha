@@ -216,7 +216,7 @@ class Offline(object):
         :param df_eval_group: group evaluation data
         :return agent : agent trained offline so it can be deployed in the environment during training
         """
-        print("Training offline")
+        print("Training offline with "+policy+" policy")
         if policy =='previous':
             #from https://stackoverflow.com/questions/15312953/choose-a-file-starting-with-a-given-string
             prefix = [filename for filename in os.listdir(self.config.offline_path) if filename.startswith(self.config.offline_policy)]
@@ -237,17 +237,16 @@ class Offline(object):
                 with open(offline_save_path, 'rb') as file:
                     buffer = pickle.load(file)
 
+            #put historical data batch to agent
+            agent.replay_memory.buffer.extend(buffer) #extend because append a buffer of tuple squeeze the list
+
             best_top_k = np.NINF if self.config.keep_best else None #negative infinity to be sure to update a t+1
+
             for step in range(self.config.offline_step):
-                #put historical data batch to agent
-                batch = random.sample(buffer,k=self.config.offline_batch_size)
-                for d in batch :
-                    agent.replay_memory.push(d)
                 #update the agent on historical buffer data
                 if len(agent.replay_memory) >= self.config.offline_batch_size:
                     save_weight = self.get_weights(agent) if self.config.keep_best else None
                     agent.update()
-
                 #Evaluate agent each `offline_eval_per_step` 
                 if (step + 1) % self.config.offline_eval_per_step == 0:
                     for top_K in self.config.top_K_list:
