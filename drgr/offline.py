@@ -252,12 +252,12 @@ class Offline(object):
                     for top_K in self.config.top_K_list:
                         avg_recall_score_user,avg_ndcg_score_user = evaluator.evaluate(agent=agent, df_eval=df_eval_user, mode='user', top_K=top_K)
                         #log to WANDB
-                        wandb.log({"Average Recall@"+str(top_K)+" Score for user":avg_recall_score_user, "average NDCG@"+str(top_K)+" Score for user": avg_ndcg_score_user},step=step)
+                        wandb.log({"Average Recall@"+str(top_K)+" Score for User in Offline":avg_recall_score_user, "average NDCG@"+str(top_K)+" Score for User in Offline": avg_ndcg_score_user},step=step)
 
                     for top_K in self.config.top_K_list:
                         avg_recall_score_goup, avg_ndcg_score_group = evaluator.evaluate(agent=agent, df_eval=df_eval_group, mode='group', top_K=top_K)
                         #log to WANDB
-                        wandb.log({"Average Recall@"+str(top_K)+" Score for Group":avg_recall_score_goup, "average NDCG@"+str(top_K)+" Score for Group": avg_ndcg_score_group},step=step)
+                        wandb.log({"Average Recall@"+str(top_K)+" Score for Group in Offline":avg_recall_score_goup, "average NDCG@"+str(top_K)+" Score for Group in Offline": avg_ndcg_score_group},step=step)
                 #AFTER EVAL, check if evaluation gives better top K value (for time constraint we'll check top_20 recall progress, but curves look alike in the online env)
                     recall_score_user_20,_ = evaluator.evaluate(agent=agent, df_eval=df_eval_user, mode='user', top_K=20)
                     #recall_score_user_20 = avg_recall_score_user # get the last value in for loop so here for Top_20
