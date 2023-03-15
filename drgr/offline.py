@@ -192,6 +192,8 @@ class Offline(object):
         """
         agent_target.actor.load_state_dict(agent.actor.state_dict())
         agent_target.critic.load_state_dict(agent.critic.state_dict())
+        agent_target.actor_target.load_state_dict(agent.actor_target.state_dict())
+        agent_target.critic_target.load_state_dict(agent.critic_target.state_dict())
 
         return agent_target
 
@@ -201,7 +203,10 @@ class Offline(object):
         :param agent: source agent
         :return agent weight: 
         """
-        weight = agent.actor.state_dict().copy() , agent.critic.state_dict().copy()
+        weight =   (agent.actor.state_dict().copy(),
+                    agent.critic.state_dict().copy(),
+                    agent.actor_target.state_dict().copy(),
+                    agent.critic_target.state_dict().copy())
         return weight
 
 
@@ -266,6 +271,7 @@ class Offline(object):
                             best_top_k=recall_score_user_20
                         else: #else keep previous weights
                             agent.actor.load_state_dict(save_weight[0]),agent.critic.load_state_dict(save_weight[1]) # load weights of previous best perf
+                            agent.actor_target.load_state_dict(save_weight[2]),agent.critic_target.load_state_dict(save_weight[3]) # load weights of previous best perf
 
 
         #dump pretrained model
