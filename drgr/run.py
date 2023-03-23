@@ -9,11 +9,11 @@ from eval import Evaluator
 from utils import OUNoise
 
 if __name__ == "__main__":
-    experiment = "random" # ["baseline","random","famous","previous"] 
+    experiment = "previous" # ["baseline","random","famous","previous"] 
     NUM_ITER = 5
     config_base = Config()
-    config = copy.copy(config_base)
-    config.group_name=experiment
+    config = copy.deepcopy(config_base)
+    config.group_name=experiment+" new-trial"
     if experiment == "baseline":
         config.is_offline=False
     else:
