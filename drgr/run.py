@@ -10,7 +10,7 @@ from utils import OUNoise
 
 if __name__ == "__main__":
     experiment = "random" # ["baseline","random","famous","previous"] 
-    NUM_ITER = 2
+    NUM_ITER = 5
     config_base = Config()
     config = copy.copy(config_base)
     config.group_name=experiment
@@ -41,7 +41,7 @@ if __name__ == "__main__":
                 offline.get_offline_data(policy=config.offline_policy)
             offline_agent = offline.train_offline(agent=offline_agent, evaluator=evaluator,
                                     df_eval_user=df_eval_user_test, df_eval_group=df_eval_group_test,save_agent=config.save_agent,policy=config.offline_policy)
-            agent = offline.copy_agent(offline_agent,agent)
+            agent = copy.copy(offline_agent) #offline.copy_agent(offline_agent,agent)
         if config.is_off_policy:
             main.train(config=config, env=env, agent=agent, evaluator=evaluator,
             df_eval_user=df_eval_user_test, df_eval_group=df_eval_group_test)
