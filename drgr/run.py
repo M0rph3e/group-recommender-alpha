@@ -12,7 +12,7 @@ if __name__ == "__main__":
     experiment = "previous" # ["baseline","random","famous","previous"] 
     NUM_ITER = 5
     config_base = Config()
-    config = copy.deepcopy(config_base)
+    config = config_base#copy.copy(config_base)
     config.group_name=experiment+" new-trial"
     if experiment == "baseline":
         config.is_offline=False
@@ -41,7 +41,7 @@ if __name__ == "__main__":
                 offline.get_offline_data(policy=config.offline_policy)
             offline_agent = offline.train_offline(agent=offline_agent, evaluator=evaluator,
                                     df_eval_user=df_eval_user_test, df_eval_group=df_eval_group_test,save_agent=config.save_agent,policy=config.offline_policy)
-            agent = copy.copy(offline_agent) #offline.copy_agent(offline_agent,agent)
+            agent = offline.copy_agent(offline_agent,agent)
         if config.is_off_policy:
             main.train(config=config, env=env, agent=agent, evaluator=evaluator,
             df_eval_user=df_eval_user_test, df_eval_group=df_eval_group_test)
