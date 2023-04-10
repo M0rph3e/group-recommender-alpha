@@ -67,7 +67,30 @@ class Evaluator(object):
         print('%s: Recall@%d = %.4f, NDCG@%d = %.4f' % (mode.capitalize(), top_K, avg_recall_score,
                                                         top_K, avg_ndcg_score))
         return avg_recall_score, avg_ndcg_score
+    
+    def eval_offline_data(self,data, mode: str = 'group', top_K=1):
+        """
+        Evaluate the offline data
 
+        :param data: offline transition data
+        :param mode: in ['user', 'group']
+        :param top_K: length of the recommendation list (always 1 for now)
+        :return: avg rewards
+        """
+        #TO DO
+        rewards = []
+        for d in data:
+            state,action,reward,next_state = d[0],d[1],d[2],d[3]
+            if reward==1:
+                rewards.append(1)
+            else:
+                rewards.append(0)
+          
+        avg_reward_score = float(np.mean(rewards))
+
+        print('%s: Average_Rewards@%d = %.4f' % (mode.capitalize(), top_K, avg_reward_score))
+
+        return avg_reward_score
 
 if __name__ == '__main__':
     config = Config()
