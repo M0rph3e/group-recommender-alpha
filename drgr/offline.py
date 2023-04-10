@@ -110,8 +110,8 @@ class Offline(object):
                 buffer.append(self.famous_policy())        
         #dump generated data in pkl
         if policy!= 'previous':
-            with open(offline_save_path,'wb') as file:
-                pickle.dump(buffer,file)
+            with open(offline_save_path,'rb') as file:
+                buffer = pickle.load(file)
         print("Done")
         return buffer
 
