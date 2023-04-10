@@ -74,6 +74,10 @@ def train(config: Config, env: Env, agent: DDPGAgent, evaluator: Evaluator,
             with open(offline_save_path,'wb') as file:
                 pickle.dump(transition_buffer,file)
 
+            #evaluate dumped data
+            avg_rewards = evaluator.eval_offline_data(transition_buffer)
+            wandb.log({"Average Rewards of offline data",avg_rewards})
+
 
 
 if __name__ == '__main__':
