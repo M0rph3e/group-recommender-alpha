@@ -76,7 +76,7 @@ def train(config: Config, env: Env, agent: DDPGAgent, evaluator: Evaluator,
 
             #evaluate dumped data
             avg_rewards = evaluator.eval_offline_data(transition_buffer)
-            wandb.log({"Average Rewards of offline data",avg_rewards})
+            wandb.log({"Mean Rewards of transition data" : avg_rewards})
 
 
 
