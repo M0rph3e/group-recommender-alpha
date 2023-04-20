@@ -21,6 +21,15 @@ You can run experiments either with the main
 
 ```
 cd drgr
+```
+Generate data from Movielens 
+```
+python generator.py
+```
+Run deploy 
+
+(you can change the hyperparameters for the model and the pipeline in the `drgr/config.py` file)
+```
 python main.py
 ```
 or with the `run.py` file that just call the main several times (if you want to run many experiments with many seeds)
