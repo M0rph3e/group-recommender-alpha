@@ -1,3 +1,42 @@
+# Offline DRGR
+This project is based on [Deep Reinforcement learning based Group Recommender system.](https://github.com/recohut/S758139)
+
+It adds an offline class and modifies the main train loop to refister performance in [Weight and Bias](https://wandb.ai/site).
+
+## SET UP THE ENVIRONMENT
+
+This repo has been worked with a [conda environment](https://docs.conda.io/en/latest/) which can be imported with a yml file : 
+
+```
+conda env create -f environment.yml
+```
+And then can be activated with
+
+```
+conda activate recsys
+```
+## RUN EXPERIMENTS
+
+You can run experiments either with the main 
+
+```
+cd drgr
+python main.py
+```
+or with the `run.py` file that just call the main several times (if you want to run many experiments with many seeds)
+```
+cd drgr
+python run.py
+```
+If you work a remote VM (eg RDCCAA VM) you can let the code run using [tmux](https://github.com/tmux/tmux/wiki).
+```
+tmux
+#run your command to run experiements
+#detach session with ctr+b-ctr+d
+#exit and if you want to relog in
+tmux attach -t0 # or t_number_of_session
+```
+
 # DRGR
 
 DRGR: Deep Reinforcement learning based Group Recommender system.
